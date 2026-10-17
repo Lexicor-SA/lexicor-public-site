@@ -3,8 +3,74 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { contactSchema } from "@/lib/contact-schema";
 import { checkContactRateLimit } from "@/lib/contact-rate-limit";
+import { z } from "zod";
 
 export const runtime = "nodejs";
+
+
+const submissionSchema = contactSchema.extend({
+  turnstileToken: z.string().min(1).max(2048),
+});
+
+type TurnstileVerification = {
+  success: boolean;
+  hostname?: string;
+  "error-codes"?: string[];
+};
+
+async function verifyTurnstile(
+  token: string
+): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+
+  if (!secret) {
+    throw new Error("Turnstile secret key is missing.");
+  }
+
+  const response = await fetch(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        secret,
+        response: token,
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Turnstile verification service failed.");
+  }
+
+  const result =
+    (await response.json()) as TurnstileVerification;
+
+  if (!result.success) {
+    return false;
+  }
+
+  // Restrict successful verification to trusted hostnames.
+  const allowedHostnames = new Set([
+    "staging.lexicor.co.za",
+    "lexicor.co.za",
+    "www.lexicor.co.za",
+  ]);
+
+  if (process.env.NODE_ENV === "development") {
+    allowedHostnames.add("localhost");
+  }
+
+  return (
+    typeof result.hostname === "string" &&
+    allowedHostnames.has(result.hostname)
+  );
+}
+
 
 const categories: Record<string, string> = {
   general: "General Enquiry",
@@ -34,7 +100,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = contactSchema.safeParse(JSON.parse(raw));
+    const result = submissionSchema.safeParse(JSON.parse(raw));
 
     if (!result.success) {
       return NextResponse.json(
@@ -89,6 +155,39 @@ export async function POST(request: Request) {
             ),
           },
         }
+      );
+    }
+
+    
+    // Verify the security token before sending email.
+    let verified = false;
+
+    try {
+      verified = await verifyTurnstile(
+        data.turnstileToken
+      );
+    } catch (error) {
+      console.error(
+        "Turnstile verification unavailable:",
+        error
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Security verification is temporarily unavailable. Please try again.",
+        },
+        { status: 503 }
+      );
+    }
+
+    if (!verified) {
+      return NextResponse.json(
+        {
+          error:
+            "Security verification failed or expired. Please try again.",
+        },
+        { status: 403 }
       );
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +8,10 @@ import {
   contactSchema,
   type ContactFormValues,
 } from "@/lib/contact-schema";
+import {
+  Turnstile,
+  type TurnstileInstance,
+} from "@marsidev/react-turnstile";
 
 const inputStyle =
   "w-full rounded-lg border border-border bg-surface px-4 py-3 outline-none focus:border-brand";
@@ -36,6 +40,14 @@ export default function ContactForm() {
     },
   });
 
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
+
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileError, setTurnstileError] = useState("");
+
+  const turnstileSiteKey =
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
   
   useEffect(() => {
     const serviceCategories: Record<
@@ -58,21 +70,37 @@ export default function ContactForm() {
   }, [requestedService, setValue]);
 
 
+  
   async function onSubmit(values: ContactFormValues) {
     setStatus(null);
     setServerError("");
+    setTurnstileError("");
+
+    if (!turnstileToken) {
+      setTurnstileError(
+        "Please complete the security verification before submitting."
+      );
+      return;
+    }
 
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...values,
+          turnstileToken,
+        }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Unable to send enquiry.");
+        throw new Error(
+          result.error || "Unable to send your enquiry."
+        );
       }
 
       setStatus("success");
@@ -80,10 +108,17 @@ export default function ContactForm() {
     } catch (error) {
       setStatus("error");
       setServerError(
-        error instanceof Error ? error.message : "Something went wrong."
+        error instanceof Error
+          ? error.message
+          : "Something went wrong."
       );
+    } finally {
+      // Tokens are single-use, so refresh after every attempt.
+      setTurnstileToken("");
+      turnstileRef.current?.reset();
     }
   }
+
 
   return (
     <form
@@ -204,9 +239,47 @@ export default function ContactForm() {
         </p>
       )}
 
+      
+      {/* Cloudflare Turnstile security verification */}
+      <div className="space-y-3">
+        {turnstileSiteKey ? (
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={turnstileSiteKey}
+            options={{
+              theme: "light",
+              size: "flexible",
+            }}
+            onSuccess={(token) => {
+              setTurnstileToken(token);
+              setTurnstileError("");
+            }}
+            onExpire={() => {
+              setTurnstileToken("");
+            }}
+            onError={() => {
+              setTurnstileToken("");
+              setTurnstileError(
+                "Security verification could not be completed. Please try again."
+              );
+            }}
+          />
+        ) : (
+          <p role="alert" className="text-sm text-red-700">
+            Security verification is currently unavailable.
+          </p>
+        )}
+
+        {turnstileError && (
+          <p role="alert" className="text-sm text-red-700">
+            {turnstileError}
+          </p>
+        )}
+      </div>
+
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !turnstileSiteKey}
         className="rounded-lg bg-brand px-8 py-3 font-medium text-brand-foreground disabled:opacity-50"
       >
         {isSubmitting ? "Sending..." : "Send Enquiry"}
