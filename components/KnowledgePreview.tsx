@@ -1,5 +1,6 @@
 
 import Link from "next/link";
+import { getAllArticles } from "@/lib/knowledge";
 
 const topics = [
   {
@@ -22,7 +23,8 @@ const topics = [
   },
 ];
 
-export default function KnowledgePreview() {
+export default async function KnowledgePreview() {
+  const articles = (await getAllArticles()).slice(0, 3);
   return (
     <section
       aria-labelledby="knowledge-heading"
@@ -60,32 +62,70 @@ export default function KnowledgePreview() {
           </div>
         </div>
 
-        {/* Knowledge topic areas */}
+        
+        {/* Knowledge topics or latest published articles */}
         <div className="mt-14 grid gap-5 md:grid-cols-3">
-          {topics.map((topic) => (
-            <article
-              key={topic.number}
-              className="rounded-xl border border-border bg-surface p-7 md:p-8"
-            >
-              <span className="text-xs font-semibold tracking-[0.15em] text-muted">
-                {topic.number}
-              </span>
+          {articles.length > 0
+            ? articles.map((article) => (
+                <article
+                  key={article.slug}
+                  className="flex flex-col rounded-xl border border-border bg-surface p-7 md:p-8"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand">
+                    {article.category}
+                  </p>
 
-              <div
-                aria-hidden="true"
-                className="mt-6 h-px w-14 bg-[#B29B77]"
-              />
+                  <div
+                    aria-hidden="true"
+                    className="mt-6 h-px w-14 bg-[#B29B77]"
+                  />
 
-              <h3 className="heading-editorial mt-7 text-2xl leading-snug">
-                {topic.title}
-              </h3>
+                  <h3 className="heading-editorial mt-7 text-2xl leading-snug">
+                    <Link
+                      href={`/knowledge/${article.slug}`}
+                      className="hover:underline"
+                    >
+                      {article.title}
+                    </Link>
+                  </h3>
 
-              <p className="mt-4 text-sm leading-7 text-muted">
-                {topic.description}
-              </p>
-            </article>
-          ))}
+                  <p className="mt-4 flex-1 text-sm leading-7 text-muted">
+                    {article.description}
+                  </p>
+
+                  <Link
+                    href={`/knowledge/${article.slug}`}
+                    className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-semibold text-brand hover:underline"
+                  >
+                    Read article <span aria-hidden="true">→</span>
+                  </Link>
+                </article>
+              ))
+            : topics.map((topic) => (
+                <article
+                  key={topic.number}
+                  className="rounded-xl border border-border bg-surface p-7 md:p-8"
+                >
+                  <span className="text-xs font-semibold tracking-[0.15em] text-muted">
+                    {topic.number}
+                  </span>
+
+                  <div
+                    aria-hidden="true"
+                    className="mt-6 h-px w-14 bg-[#B29B77]"
+                  />
+
+                  <h3 className="heading-editorial mt-7 text-2xl leading-snug">
+                    {topic.title}
+                  </h3>
+
+                  <p className="mt-4 text-sm leading-7 text-muted">
+                    {topic.description}
+                  </p>
+                </article>
+              ))}
         </div>
+
 
         {/* Link to Knowledge page */}
         <div className="mt-12 flex flex-wrap items-center justify-between gap-5 border-t border-border pt-8">

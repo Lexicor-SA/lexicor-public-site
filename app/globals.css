@@ -107,3 +107,105 @@ svg {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Lexicor Knowledge — Article Typography */
+
+.knowledge-article {
+  color: var(--foreground);
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.knowledge-article > * + * {
+  margin-top: 1.5rem;
+}
+
+.knowledge-article h2,
+.knowledge-article h3,
+.knowledge-article h4 {
+  font-family: var(--font-libre-baskerville), Georgia, serif;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.knowledge-article h2 {
+  margin-top: 3rem;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+}
+
+.knowledge-article h3 {
+  margin-top: 2rem;
+  font-size: 1.35rem;
+}
+
+.knowledge-article h4 {
+  margin-top: 1.75rem;
+  font-size: 1.1rem;
+}
+
+.knowledge-article p {
+  margin-top: 1.25rem;
+}
+
+.knowledge-article ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.knowledge-article ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+.knowledge-article li {
+  margin-top: 0.5rem;
+}
+
+.knowledge-article a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+}
+
+.knowledge-article blockquote {
+  margin: 2rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 3px solid #b29b77;
+  background: var(--surface);
+  font-style: italic;
+}
+
+.knowledge-article strong {
+  font-weight: 700;
+}
+
+.knowledge-article hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.knowledge-article img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+}
+
+.knowledge-article pre {
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: #1f2a37;
+  color: #ffffff;
+}
+
+.knowledge-article code {
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 768px) {
+  .knowledge-article {
+    font-size: 1.0625rem;
+  }
+}
