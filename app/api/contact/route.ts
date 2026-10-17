@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { contactSchema } from "@/lib/contact-schema";
+import { checkContactRateLimit } from "@/lib/contact-rate-limit";
 
 export const runtime = "nodejs";
 
@@ -48,6 +49,49 @@ export async function POST(request: Request) {
     if (data.website) {
       return NextResponse.json({ success: true });
     }
+
+    
+    // Determine the visitor's IP address.
+    // Vercel provides forwarding headers for deployed requests.
+    const ip =
+      request.headers
+        .get("x-forwarded-for")
+        ?.split(",")[0]
+        ?.trim() || "unknown";
+
+    let rateLimit;
+
+    try {
+      rateLimit = await checkContactRateLimit(ip);
+    } catch (error) {
+      console.error("Contact rate-limit service error:", error);
+
+      return NextResponse.json(
+        { error: "Enquiries are temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        {
+          error:
+            "Too many enquiries have been submitted. Please try again later.",
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.max(
+                1,
+                Math.ceil((rateLimit.reset - Date.now()) / 1000)
+              )
+            ),
+          },
+        }
+      );
+    }
+
 
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.CONTACT_FROM_EMAIL;

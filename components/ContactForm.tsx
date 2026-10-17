@@ -1,7 +1,7 @@
-
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -13,6 +13,8 @@ const inputStyle =
   "w-full rounded-lg border border-border bg-surface px-4 py-3 outline-none focus:border-brand";
 
 export default function ContactForm() {
+  const searchParams = useSearchParams();
+  const requestedService = searchParams.get("service");
   const [status, setStatus] = useState<"success" | "error" | null>(null);
   const [serverError, setServerError] = useState("");
 
@@ -20,6 +22,7 @@ export default function ContactForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -32,6 +35,28 @@ export default function ContactForm() {
       website: "",
     },
   });
+
+  
+  useEffect(() => {
+    const serviceCategories: Record<
+      string,
+      ContactFormValues["category"]
+    > = {
+      establishment: "entity-changes",
+      ownership: "ownership",
+      governance: "governance",
+      compliance: "compliance",
+    };
+
+    if (requestedService) {
+      const category = serviceCategories[requestedService];
+
+      if (category) {
+        setValue("category", category);
+      }
+    }
+  }, [requestedService, setValue]);
+
 
   async function onSubmit(values: ContactFormValues) {
     setStatus(null);
@@ -74,10 +99,19 @@ export default function ContactForm() {
           id="name"
           autoComplete="name"
           className={inputStyle}
+          aria-invalid={Boolean(errors.name)}
+          aria-describedby={errors.name ? "name-error" : undefined}
           {...register("name")}
         />
+
         {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+          <p
+            id="name-error"
+            role="alert"
+            className="mt-2 text-sm text-red-700"
+          >
+            {errors.name.message}
+          </p>
         )}
       </div>
 
