@@ -18,7 +18,7 @@ export default function Hero() {
       />
 
       
-        <div className="relative mx-auto grid min-h-[480px] max-w-7xl items-center gap-10 px-6 py-14 md:py-16 lg:min-h-[min(650px,calc(100svh-80px))] lg:grid-cols-[1.25fr_0.75fr] lg:gap-8 lg:py-12">
+        <div className="relative mx-auto grid min-h-[420px] max-w-7xl items-center gap-10 px-6 py-12 md:min-h-[480px] md:py-16 lg:min-h-[min(650px,calc(100svh-80px))] lg:grid-cols-[1.25fr_0.75fr] lg:gap-8 lg:py-12">
 
 
         {/* Left: Text content */}

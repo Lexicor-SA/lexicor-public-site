@@ -58,7 +58,7 @@ export default function Services() {
     <section
       id="services"
       aria-labelledby="services-heading"
-      className="border-t border-border bg-background pt-20 pb-14 lg:pt-24 lg:pb-16"
+      className="border-t border-border bg-background pt-14 pb-12 md:pt-20 md:pb-14 lg:pt-24 lg:pb-16"
     >
       <div className="mx-auto max-w-7xl px-6">
         {/* Section introduction */}
@@ -86,11 +86,11 @@ export default function Services() {
         </div>
 
         {/* Service cards */}
-        <div className="mt-14 grid gap-5 md:grid-cols-2">
+        <div className="mt-9 grid gap-4 md:mt-14 md:grid-cols-2 md:gap-5">
           {services.map((service) => (
             <article
               key={service.number}
-              className="group relative overflow-hidden rounded-xl border border-border bg-surface p-7 transition-colors duration-200 hover:border-[#B29B77] md:p-9"
+              className="group relative overflow-hidden rounded-xl border border-border bg-surface p-5 transition-colors duration-200 hover:border-[#B29B77] sm:p-7 md:p-9"
             >
               {/* Small heritage accent */}
               <div
@@ -104,7 +104,7 @@ export default function Services() {
                 </span>
               </div>
 
-              <h3 className="heading-editorial mt-8 text-[1.65rem] leading-snug md:text-[1.9rem]">
+              <h3 className="heading-editorial mt-5 text-[1.5rem] leading-snug sm:mt-8 sm:text-[1.65rem] md:text-[1.9rem]">
                 {service.title}
               </h3>
 
@@ -112,7 +112,7 @@ export default function Services() {
                 {service.description}
               </p>
 
-              <div className="my-7 h-px bg-border" />
+              <div className="my-5 h-px bg-border md:my-7" />
 
               <ul className="grid gap-3 sm:grid-cols-2">
                 {service.features.map((feature) => (

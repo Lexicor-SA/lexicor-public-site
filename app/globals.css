@@ -82,3 +82,28 @@ svg {
   letter-spacing: -0.035em;
   line-height: 1.15;
 }
+
+
+/* Accessibility: visible keyboard focus */
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid #b29b77;
+  outline-offset: 4px;
+}
+
+
+/* Accessibility: respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
